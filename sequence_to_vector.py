@@ -5,6 +5,7 @@ author: Sounak Mondal
 # std lib imports
 from msilib import sequence
 from typing import Dict
+from unicodedata import bidirectional
 
 # external libs
 import torch
@@ -87,8 +88,10 @@ class DanSequenceToVector(SequenceToVector):
         self.dropout = dropout
         self.device = device
         self.layers=nn.Sequential()
+        self.atten = nn.MultiheadAttention(input_dim, 1, dropout=dropout)
+
         for i in range(num_layers):
-            self.layers.add_module(str(len(self.layers)), nn.Linear(input_dim,input_dim))
+            self.layers.add_module(str(len(self.layers)), nn.Linear(input_dim, input_dim, device=device))
             if i < num_layers - 1:
                 self.layers.add_module(str(len(self.layers)), nn.ReLU())
         # TODO(students): end
@@ -104,6 +107,7 @@ class DanSequenceToVector(SequenceToVector):
         if training:
             bernoulli_dropout = torch.distributions.Bernoulli(self.dropout).sample((vector_sequence.shape[1],))
             vector_sequence = vector_sequence[:, bernoulli_dropout==1]
+        vector_sequence = self.atten(vector_sequence, vector_sequence, vector_sequence)[0]
         vector_sequence = torch.div(torch.sum(vector_sequence, 1), counts_mask)
         layer_representations=None
         for i in range(len(self.layers)):
@@ -120,7 +124,7 @@ class DanSequenceToVector(SequenceToVector):
                 "layer_representations": layer_representations}
 
 
-class GruSequenceToVector(SequenceToVector):
+class BiLSTMSequenceToVector(SequenceToVector):
     """
     It is a class defining GRU based Sequence To Vector encoder.
     You have to implement this.
@@ -135,11 +139,10 @@ class GruSequenceToVector(SequenceToVector):
         is a GRU encoder unlike DAN where they were feedforward based.
     """
     def __init__(self, input_dim: int, num_layers: int, device = 'cpu'):
-        super(GruSequenceToVector, self).__init__(input_dim)
+        super(BiLSTMSequenceToVector, self).__init__(input_dim)
         # TODO(students): start
         self.device = device
-        self.hidden_size = input_dim
-        self.gru = nn.GRU(input_dim, input_dim, num_layers)
+        self.layers = nn.LSTM(input_size=input_dim, hidden_size=input_dim, num_layers=num_layers, batch_first=True, bidirectional=True, device=device)
         # TODO(students): end
 
     def forward(self,
@@ -147,10 +150,21 @@ class GruSequenceToVector(SequenceToVector):
              sequence_mask: torch.Tensor,
              training=False) -> torch.Tensor:
         # TODO(students): start
+        vector_sequence = vector_sequence * sequence_mask[:,:,None]
         vector_sequence = torch.nn.utils.rnn.pack_padded_sequence(vector_sequence, torch.count_nonzero(sequence_mask, 1), True, False)
-        output, hidden = self.gru(vector_sequence)
-        combined_vector = torch.select(hidden, 0 ,-1)
-        layer_representations = hidden
+        (hidden_state, cell_state) = self.layers(vector_sequence)[1]
+        lays = []
+
+        # 4 layers = 8 hidden
+        for i in range(0, len(hidden_state), 2):
+            fwd = hidden_state[i, :, :]
+            back = hidden_state[i+1, :, :]
+            avg = torch.add(fwd, back)
+            avg = torch.div(avg, 2)
+            lays.append(avg)
+        
+        combined_vector = lays[-1]
+        layer_representations = torch.stack(lays, dim=1)
         # TODO(students): end
         return {"combined_vector": combined_vector,
                 "layer_representations": layer_representations}
