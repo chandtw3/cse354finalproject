@@ -1,2 +1,6 @@
 __pycache__
 data/glove.6B.50d.txt
+serialization_dirs_past
+plots_past
+cmds.txt
+gdrive_link.txt
