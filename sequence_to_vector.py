@@ -103,12 +103,12 @@ class DanSequenceToVector(SequenceToVector):
         # TODO(students): start
         sequence_mask = torch.unsqueeze(sequence_mask,2).expand(vector_sequence.size()[0],vector_sequence.size()[1],vector_sequence.size()[2])
         vector_sequence = torch.mul(vector_sequence, sequence_mask)
-        counts_mask = vector_sequence.count_nonzero(1)
+        counts = vector_sequence.count_nonzero(1)
         if training:
             bernoulli_dropout = torch.distributions.Bernoulli(self.dropout).sample((vector_sequence.shape[1],))
             vector_sequence = vector_sequence[:, bernoulli_dropout==1]
         vector_sequence = self.atten(vector_sequence, vector_sequence, vector_sequence)[0]
-        vector_sequence = torch.div(torch.sum(vector_sequence, 1), counts_mask)
+        vector_sequence = torch.div(torch.sum(vector_sequence, 1), counts)
         layer_representations=None
         for i in range(len(self.layers)):
             vector_sequence = self.layers[i](vector_sequence)
@@ -119,6 +119,8 @@ class DanSequenceToVector(SequenceToVector):
                     layer_representations = torch.cat((layer_representations, torch.unsqueeze(vector_sequence,0)),0)
 
         combined_vector = vector_sequence
+        print(combined_vector.size())
+        print(layer_representations.size())
         # TODO(students): end
         return {"combined_vector": combined_vector,
                 "layer_representations": layer_representations}
@@ -166,5 +168,44 @@ class BiLSTMSequenceToVector(SequenceToVector):
         combined_vector = lays[-1]
         layer_representations = torch.stack(lays, dim=1)
         # TODO(students): end
+        return {"combined_vector": combined_vector,
+                "layer_representations": layer_representations}
+
+class CNNSequenceToVector(SequenceToVector):
+    def __init__(self, input_dim: int, num_layers: int, device = 'cpu'):
+        super(CNNSequenceToVector, self).__init__(input_dim)
+        self.device = device
+        filter_size = 2
+        self.layers =nn.Sequential()
+        for i in range(num_layers):
+            self.layers.add_module(str(len(self.layers)), nn.Conv2d(1, input_dim, (filter_size, input_dim)))
+            self.layers.add_module(str(len(self.layers)), nn.ReLU())
+            #filter_size += 1
+
+        self.projection = nn.Linear(input_dim*num_layers, input_dim)
+            
+    def forward(self,
+             vector_sequence: torch.Tensor,
+             sequence_mask: torch.Tensor,
+             training=False):
+        sequence_mask = torch.unsqueeze(sequence_mask,2).expand(vector_sequence.size()[0],vector_sequence.size()[1],vector_sequence.size()[2])
+        vector_sequence = torch.mul(vector_sequence, sequence_mask)            
+        vector_sequence = vector_sequence.unsqueeze(1)
+        layer_representations = []
+        for i in range(0, len(self.layers), 2):
+            conv_out = self.layers[i](vector_sequence)
+            #print(conv_out.size())
+            act_out = self.layers[i+1](conv_out)
+            #print(act_out.size())
+            pool_layer = nn.MaxPool1d(kernel_size=act_out.size(2))
+            pool_out = pool_layer(act_out.squeeze(3))
+            #print(pool_out.size())
+            layer_representations.append(pool_out.squeeze(2))
+        combined_vector = torch.cat(layer_representations, 1)
+        layer_representations = torch.stack(layer_representations, 0)
+        combined_vector = self.projection(combined_vector)
+        combined_vector = nn.ReLU()(combined_vector)
+        # print(combined_vector.size())
+        # print(layer_representations.size())
         return {"combined_vector": combined_vector,
                 "layer_representations": layer_representations}
