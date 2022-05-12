@@ -10,7 +10,7 @@ import torch
 import torch.nn as nn
 
 # project imports
-from sequence_to_vector import DanSequenceToVector, GruSequenceToVector, CNNSequenceToVector
+from sequence_to_vector import DanSequenceToVector, BiLSTMSequenceToVector, CNNSequenceToVector
 
 torch.manual_seed(1337)
 
@@ -47,8 +47,8 @@ class MainClassifier(nn.Module):
 
         if seq2vec_choice == "dan":
             self._seq2vec_layer = DanSequenceToVector(embedding_dim, num_layers, device = device).to(device)
-        elif seq2vec_choice == "gru":
-            self._seq2vec_layer = GruSequenceToVector(embedding_dim, num_layers, device = device).to(device)
+        elif seq2vec_choice == "bilstm":
+            self._seq2vec_layer = BiLSTMSequenceToVector(embedding_dim, num_layers, device = device).to(device)
         else:
             self._seq2vec_layer = CNNSequenceToVector(embedding_dim, num_layers, device = device).to(device)
 

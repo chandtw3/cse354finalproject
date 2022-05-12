@@ -1,1 +1,1 @@
-{"training_loss": 0.3975478708744049, "validation_loss": 0.43762722611427307, "training_accuracy": 0.8992, "best_epoch_validation_accuracy": 0.8413333333333334, "best_epoch_validation_loss": 0.43762722611427307}
+{"training_loss": 0.5026717782020569, "validation_loss": 0.528754711151123, "training_accuracy": 0.882, "best_epoch_validation_accuracy": 0.8066666666666666, "best_epoch_validation_loss": 0.528754711151123}
