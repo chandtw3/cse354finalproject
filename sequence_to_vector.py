@@ -119,8 +119,8 @@ class DanSequenceToVector(SequenceToVector):
                     layer_representations = torch.cat((layer_representations, torch.unsqueeze(vector_sequence,0)),0)
 
         combined_vector = vector_sequence
-        print(combined_vector.size())
-        print(layer_representations.size())
+        #print(combined_vector.size())
+        # print(layer_representations.size())
         # TODO(students): end
         return {"combined_vector": combined_vector,
                 "layer_representations": layer_representations}
@@ -178,7 +178,7 @@ class CNNSequenceToVector(SequenceToVector):
         filter_size = 2
         self.layers =nn.Sequential()
         for i in range(num_layers):
-            self.layers.add_module(str(len(self.layers)), nn.Conv2d(1, input_dim, (filter_size, input_dim)))
+            self.layers.add_module(str(len(self.layers)), nn.Conv1d(1, input_dim, (filter_size, input_dim)))
             self.layers.add_module(str(len(self.layers)), nn.ReLU())
             #filter_size += 1
 
@@ -204,7 +204,6 @@ class CNNSequenceToVector(SequenceToVector):
         combined_vector = torch.cat(layer_representations, 1)
         layer_representations = torch.stack(layer_representations, 0)
         combined_vector = self.projection(combined_vector)
-        combined_vector = nn.ReLU()(combined_vector)
         # print(combined_vector.size())
         # print(layer_representations.size())
         return {"combined_vector": combined_vector,
