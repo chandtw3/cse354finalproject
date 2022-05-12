@@ -10,7 +10,7 @@ from evaluate import evaluate
 if __name__ == '__main__':
 
     training_commands, predict_commands = [], []
-    seq2vec_name_to_last_layer = {"dan": 4, "gru": 4}
+    seq2vec_name_to_last_layer = {"dan": 4, "bilstm": 4, "cnn": 4}
     probing_accuracies = {}
 
     for seq2vec_name, layer in seq2vec_name_to_last_layer.items():
@@ -78,9 +78,9 @@ if __name__ == '__main__':
         exit()
 
     # Make the plots
-    seq2vec_names = ["dan", "gru"]
-    plt.xticks(range(2), seq2vec_names)
-    plt.bar(range(2), [probing_accuracies["dan"], probing_accuracies["gru"]],
+    seq2vec_names = ["dan", "bilstm", "cnn"]
+    plt.xticks(range(3), seq2vec_names)
+    plt.bar(range(3), [probing_accuracies["dan"], probing_accuracies["bilstm"], probing_accuracies["cnn"]],
             align='center', alpha=0.5)
     plt.ylabel('Accuracy')
     plt.title('BigramOrderTask: Probing Performance at Last Layer')

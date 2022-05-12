@@ -10,8 +10,8 @@ from evaluate import evaluate
 if __name__ == '__main__':
 
     training_commands, predict_commands = [], []
-    choices = {"dan": range(1, 4+1), "gru": range(1, 4+1)}
-    probing_accuracies = {"dan": [], "gru": []}
+    choices = {"dan": range(1, 4+1), "bilstm": range(1, 4+1), "cnn": range(1, 4+1)}
+    probing_accuracies = {"dan": [], "bilstm": [], "cnn" : []}
 
     for seq2vec_name, layers in choices.items():
         # Check if Base Models have been trained first.

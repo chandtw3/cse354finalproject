@@ -23,10 +23,10 @@ if __name__ == '__main__':
 
     training_commands = []
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    choices = {"dan": range(1, 4+1), "gru": range(1, 4+1)}
+    choices = {"dan": range(1, 4+1), "bilstm": range(1, 4+1), "cnn": range(1, 4+1)}
 
-    models = {"dan": None, "gru": None}
-    vocabs = {"dan": None, "gru": None}
+    models = {"dan": None, "bilstm": None, "cnn": None}
+    vocabs = {"dan": None, "bilstm": None, "cnn": None}
     for seq2vec_name, _ in choices.items():
 
         serialization_dir = os.path.join("serialization_dirs", f"main_{seq2vec_name}_5k_with_emb")

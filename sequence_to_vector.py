@@ -166,8 +166,7 @@ class BiLSTMSequenceToVector(SequenceToVector):
             lays.append(avg)
         
         combined_vector = lays[-1]
-        layer_representations = torch.stack(lays, dim=1)
-        # TODO(students): end
+        layer_representations = torch.stack(lays, dim=0)
         return {"combined_vector": combined_vector,
                 "layer_representations": layer_representations}
 

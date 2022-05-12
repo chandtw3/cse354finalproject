@@ -8,9 +8,9 @@ import matplotlib.pyplot as plt
 if __name__ == '__main__':
     missing_metrics_paths = []
     training_commands = []
-    seq2vec_choices = ["dan", "gru"]
+    seq2vec_choices = ["dan", "bilstm", "cnn"]
     data_sizes = ["5k", "10k", "15k"]
-    validation_accuracies = {"dan": [], "gru": []}
+    validation_accuracies = {"dan": [], "bilstm": [], "cnn" : []}
     for seq2vec_choice in seq2vec_choices:
         epochs = 8 if seq2vec_choice == "dan" else 4 # gru is slow, use only 4 epochs
         for size in data_sizes:
